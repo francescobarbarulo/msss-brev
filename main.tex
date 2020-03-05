@@ -22,18 +22,6 @@
 
 \usepackage{makecell}
 
-% BAN logic macros
-\newcommand{\believes}{\mid\!\equiv}
-\newcommand{\sees}{\triangleleft}
-\newcommand{\oncesaid}{\mid\!\sim}
-\newcommand{\controls}{\Rightarrow}
-\newcommand{\fresh}[1]{\#(#1)}
-\newcommand{\combine}[2]{{\langle #1 \rangle}_{#2}}
-\newcommand{\encrypt}[2]{{ \{ #1 \} }_{#2}}
-\newcommand{\sharekey}[1]{\xleftrightarrow{#1}}
-\newcommand{\pubkey}[1]{\xmapsto{#1}}
-\newcommand{\secret}[1]{\xleftrightharpoons{#1}}
-
 \usepackage[hidelinks]{hyperref}
 
 \title{Mobile and Social Sensing Systems}
@@ -61,21 +49,38 @@ We wish you good luck!}
   \item \textbf{logical}: applications and data may need to be moved for design reasons
 \end{itemize}
 
-\subsection{Localization}
-Node state:
+\section{Localization systems}
+Localization systems consist of two main blocks:
+\begin{enumerate}[label=\roman*.]
+	\item Set of deployed nodes with different \textit{states}:
+		\begin{itemize}
+		 	\item \textbf{beacon} (\textit{landmarks} or \textit{anchors}): already know their locations through a manual configuration or through GPS reading;
+		  	\item \textbf{unknown} (\textit{targets}): do not have any information about their geographic locations;
+		  	\item \textbf{settled}: targets nodes that has determined or estimated their locations.
+		\end{itemize}
+	\item Localization algorithm:
+		\begin{itemize}
+			\item GPS not longer used in CPS for cost and energy constraints;
+			\item GPS-free techniques exploit the sensing and the wireless communication capabilities of CPS components
+		\end{itemize}
+\end{enumerate}
+
+\subsection{Topology}
+The topology of a localization algorithm refers to \textit{where} and \textit{how} the location of a given node is calculated:
+
 \begin{itemize}
-  \item known / beacon
-  \item unknown
-  \item settled
+	\item \textbf{Centralized localizaiton}: a central device estimates the location of unknown nodes based on the signal measurements forwarded by anchors;
+	\item \textbf{Localized localization}: each object estimates its location using the collected signal measurements and location information of the anchor nodes in its neighbourhood.
 \end{itemize}
 
-\subsection{Taxonomy}
-\begin{tabular}{| c | c |}\hline
-with anchor & without anchor \\ \hline
-centralized systems & localized systems \\ \hline
-remote positioning & self-positioning \\ \hline
-\end{tabular}
+We can distinguish four different system topologies for localization systems, as shown in Figure~\ref{fig:topology}.
+\begin{figure}[H]
+	\centering
+  	\includegraphics[width=0.4\textwidth]{img/topology}
+  	\caption{\label{fig:topology}Taxonomy of localization systems topology}
+\end{figure}
 
+\subsection{Coordinate System}
 Coordinates:
 \begin{itemize}
   \item physical
