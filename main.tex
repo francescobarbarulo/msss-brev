@@ -45,9 +45,11 @@ We wish you good luck!}
 \section{Introduction}
 \subsection{Mobility}
 \begin{itemize}
-  \item \textbf{physical}: hardware actually changes its physical position
-  \item \textbf{logical}: applications and data may need to be moved for design reasons
+    \item \textbf{Physical}: hardware actually changes its physical position;
+    \item \textbf{Logical}: applications and data may need to be moved for design reasons.
 \end{itemize}
+
+Mobile computing relys on the ability to use devices \textit{non-physically connected} and \textit{context-aware}. And these devices must keep computinal and communicaiton capabilities paying attention to energy comsumption because of their battery-powered nature.
 
 \section{Localization systems}
 Localization systems consist of two main blocks:
@@ -61,7 +63,7 @@ Localization systems consist of two main blocks:
 	\item Localization algorithm:
 		\begin{itemize}
 			\item GPS not longer used in CPS for cost and energy constraints;
-			\item GPS-free techniques exploit the sensing and the wireless communication capabilities of CPS components
+			\item \textbf{GPS-free} techniques exploit the sensing and the wireless communication capabilities of CPS components.
 		\end{itemize}
 \end{enumerate}
 
@@ -81,29 +83,28 @@ We can distinguish four different system topologies for localization systems, as
 \end{figure}
 
 \subsection{Coordinate System}
-Coordinates:
 \begin{itemize}
-  \item physical
-  \item symbolic
-  \item absolute
-  \item relative
+  \item \textbf{Physical}: locations are represented as a point in a 2D/3D coordinate system;
+  \item \textbf{Symbolic}: locations are expressed as logical positions’ information;
+  \item \textbf{Absolute}: locations are expressed as unique coordinate values making reference to \textit{anchor} nodes that know their positions;
+  \item \textbf{Relative}: locations are determined relatively to other nodes with no reference to absolute anchors.
 \end{itemize}
 
-Communication paradigm:
+\subsection{Communication paradigm}
 \begin{itemize}
-  \item non-cooperative
-  \item cooperative
-  \item opportunistic
+  \item \textbf{Non-cooperative}: the communication is restricted between unknown nodes and anchors (\textit{high density} of anchors or \textit{long-range anchor transmissions} are needed);
+  \item \textbf{Cooperative}: allows communication between unknown nodes (more \textit{processing} is required);
+  \item \textbf{Opportunistic}: exploits interactions between nodes that occasionally pass each other in their proximity (efficient \textit{node discovery} and \textit{data exchange}).
 \end{itemize}
 
-Metrics:
+\subsection{Performance metrics}
 \begin{itemize}
-  \item accuracy: mean distance error
-  \item precision: CDF of distance error
-  \item complexity: hardware and/or software
-  \item robustness: behavior under extreme conditions
-  \item scalability: geographical and density
-  \item cost
+  \item \textbf{Accuracy}: mean (Euclidean) distance error between the estimated location and the true location;
+  \item \textbf{Precision}: variation over many algorithm trials, CDF of distance error;
+  \item \textbf{Complexity}: hardware and/or software;
+  \item \textbf{Robustness}: behavior under unwanted conditions;
+  \item \textbf{Scalability}: geographical and density;
+  \item \textbf{Cost}
 \end{itemize}
 
 
