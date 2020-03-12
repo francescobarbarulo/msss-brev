@@ -8,6 +8,8 @@
 \newdateformat{monthyeardate}{%
   \monthname[\THEMONTH], \THEYEAR}
 
+\usepackage{subcaption}
+
 % Math packages
 \usepackage{mathtools}
 \usepackage{amsmath}
@@ -53,7 +55,7 @@ Mobile computing relys on the ability to use devices \textit{non-physically conn
 
 \section{Localization systems}
 Localization systems consist of two main blocks:
-\begin{enumerate}[label=\roman*.]
+\begin{enumerate}[label=(\roman*)]
 	\item Set of deployed nodes with different \textit{states}:
 		\begin{itemize}
 		 	\item \textbf{beacon} (\textit{landmarks} or \textit{anchors}): already know their locations through a manual configuration or through GPS reading;
@@ -76,10 +78,10 @@ The topology of a localization algorithm refers to \textit{where} and \textit{ho
 \end{itemize}
 
 We can distinguish four different system topologies for localization systems, as shown in Figure~\ref{fig:topology}.
-\begin{figure}[H]
+\begin{figure}
 	\centering
-  	\includegraphics[width=0.4\textwidth]{img/topology}
-  	\caption{\label{fig:topology}Taxonomy of localization systems topology}
+  \includegraphics[width=0.6\textwidth]{img/topology}
+  \caption{\label{fig:topology}Taxonomy of localization systems topology}
 \end{figure}
 
 \subsection{Coordinate System}
@@ -107,6 +109,77 @@ We can distinguish four different system topologies for localization systems, as
   \item \textbf{Cost}
 \end{itemize}
 
+\subsection{Category}
+The catogery of the localization technique pertains to how the location of a node is calculated depending on whether they are based on distance measurement or not. The two main categories are: \textit{range-based} and \textit{range-free}. 
 
+Note that all the following techniques are classified as \textit{anchor-based} schemes, assuming the existence of nodes with known positions.
+
+\subsubsection{Range-based}
+Range-based (or distance-based) techniques rely on the computation of distances between the target node and the anchor nodes to infer the position of a target node using \textit{lateration} techniques.
+
+Location discovery consists of two phases:
+\begin{enumerate}
+  \item \textbf{Ranging phase} (or measuring distance): each node estimates its distance or angle from neighbors based on information contained in \textit{beacon} messages.
+  The main three distance measuring methods are: 
+
+  \begin{enumerate}[label=(\roman*)]
+    \item \textit{Received Signal Strength (RSS)} estimates the distance from some set of neighbors using the attenuation of emitted signal strength. In free space, the RSS varies as the inverse square of the distance $d$ between the transmitter and the receiver:
+
+    \begin{equation}
+    P_r(d) = \frac{P_t G_t G_r \lambda^2}{(4\pi)^2 d^2}
+    \end{equation}
+
+    where $ P_r $ and $ P_t $ are respectively the reception and transmission power, $ G $ is the antenna gain, $ \lambda $ is constant and $ d $ is the distance between transmitter and receiver. Unfortunately, RSS is unreliable as it gets affected by the random multi-path effect.
+
+    The parameters employed in these models are \textit{site-specific} and an empirical model is derived by obtaining a least square fit for each power level:
+
+    \begin{equation}
+    P_{RSSI} = \frac{X}{d^n}
+    \end{equation}
+
+    \item \textit{Time of Arrival} consists in calculating the one way propagation time of radio signals (RF) between two \textbf{synchronized} nodes. This time is proportional to the distance between transreceivers and is given by Eq.~\ref{eq:toa}:
+
+    \begin{equation}
+    d = c_r \times (t_1 - t_0)
+    \label{eq:toa}
+    \end{equation}
+
+    This method of RF signals is usually inappropriate for WSNs because of short distances and inaccurate time synchronization of sensor nodes.
+
+    \begin{figure}[b]
+    \centering
+    \begin{subfigure}{.5\textwidth}
+      \centering
+      \includegraphics[width=.4\linewidth]{img/toa}
+      \caption{Time of Arrival}
+    \end{subfigure}%
+    \begin{subfigure}{.5\textwidth}
+      \centering
+      \includegraphics[width=.4\linewidth]{img/tdoa}
+      \caption{Time Difference of Arrival}
+    \end{subfigure}
+    \caption{Time-based localization techiques}
+    \end{figure}
+
+    The TOA method can be used with Ultra-wideband (UWB) radio with which high accuracy can be achieved regardless the clock resolution thanks to the small propagation speed of ultrasound radios. This method is referred as \textit{Time Difference of Arrival} (TDoA) and is based on the measurement of the time difference of the propagation of radio signals and ultrasound signals. When a node (anchor) simultaneously sends an RF signal and an ultrasound signal, the receiver (target) considers the arrival time of the (faster) radio signal as a time reference and uses the arrival time of the (slower) ultrasound radio to calculate the delay between the two signals. The distance is calculated according to Eq.~\ref{eq:tdoa}:
+
+    \begin{equation}
+    d = \frac{c_r \times c_u \times (t_2 - t_1)}{c_r - c_u}
+    \label{eq:tdoa}
+    \end{equation}
+
+    where $c_r$ and $c_u$ are respectively the propagation speed of both radio and ultrasound signals, while $t_1$ and $t_2$ are their reception times at the receiver level.
+
+    The TDOA method has the advantage to provide much better accuracy than RSS-based methods and it does not suffer from the need of explicit synchronization between nodes. However, it presents the drawback of requiring additional and more complex hardware with two different transceivers, which would have a negative impact on the cost.
+
+    \item \textit{Angle of Arrival}
+  \end{enumerate}
+
+  \item \textbf{Estimation phase} (or combining distance): nodes use range information and anchors' locations to estimate their positions.
+\end{enumerate}
+
+\subsubsection{Range-free}
+
+\subsection{Geolocation techniques}Geolocation is the act of finding unknown nodes locations based on some information pertaining to distances and angles measurements.
 
 \end{document}
