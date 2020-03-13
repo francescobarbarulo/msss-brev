@@ -112,7 +112,7 @@ We can distinguish four different system topologies for localization systems, as
 \subsection{Category}
 The catogery of the localization technique pertains to how the location of a node is calculated depending on whether they are based on distance measurement or not. The two main categories are: \textit{range-based} and \textit{range-free}. 
 
-Note that all the following techniques are classified as \textit{anchor-based} schemes, assuming the existence of nodes with known positions.
+Note that all the presented techniques are classified as \textit{anchor-based} schemes, assuming the existence of nodes with known positions.
 
 \subsubsection{Range-based}
 Range-based (or distance-based) techniques rely on the computation of distances between the target node and the anchor nodes to infer the position of a target node using \textit{lateration} techniques.
@@ -161,7 +161,7 @@ Location discovery consists of two phases:
     \caption{Time-based localization techiques}
     \end{figure}
 
-    The TOA method can be used with Ultra-wideband (UWB) radio with which high accuracy can be achieved regardless the clock resolution thanks to the small propagation speed of ultrasound radios. This method is referred as \textit{Time Difference of Arrival} (TDoA) and is based on the measurement of the time difference of the propagation of radio signals and ultrasound signals. When a node (anchor) simultaneously sends an RF signal and an ultrasound signal, the receiver (target) considers the arrival time of the (faster) radio signal as a time reference and uses the arrival time of the (slower) ultrasound radio to calculate the delay between the two signals. The distance is calculated according to Eq.~\ref{eq:tdoa}:
+    The TOA method can be used with Ultra-wideband (UWB) radio with which high accuracy can be achieved regardless the clock resolution thanks to the small propagation speed of ultrasound radios. This method is referred to as \textit{Time Difference of Arrival} (TDoA) and is based on the measurement of the time difference of the propagation of radio signals and ultrasound signals. When a node (anchor) simultaneously sends an RF signal and an ultrasound signal, the receiver (target) considers the arrival time of the (faster) radio signal as a time reference and uses the arrival time of the (slower) ultrasound radio to calculate the delay between the two signals. The distance is calculated according to Eq.~\ref{eq:tdoa}:
 
     \begin{equation}
     d = \frac{c_r \times c_u \times (t_2 - t_1)}{c_r - c_u}
@@ -172,14 +172,52 @@ Location discovery consists of two phases:
 
     The TDOA method has the advantage to provide much better accuracy than RSS-based methods and it does not suffer from the need of explicit synchronization between nodes. However, it presents the drawback of requiring additional and more complex hardware with two different transceivers, which would have a negative impact on the cost.
 
-    \item \textit{Angle of Arrival}
+    \item \textit{Angle of Arrival} relies on computing the angle by two lines connecting the unknown node with two anchor nodes. This technique relies on the use of directional antennas that can rotate on their axis or an array of antennas. For locating the unknown node at least three anchor nodes in 3D space and two anchor nodes in 2D space are needed.
+
+    The advantage of AoA is that it does not require time sinchronization but on the other hand it requires vomplex and expensive hardware.
   \end{enumerate}
 
-  \item \textbf{Estimation phase} (or combining distance): nodes use range information and anchors' locations to estimate their positions.
+  \item \textbf{Estimation phase} (or combining distance): nodes use range information and anchors' locations to estimate their positions. In this phase some \textit{geometric geolocation techniques} are used:
+
+  \begin{figure}[b]
+    \centering
+    \begin{subfigure}{.5\textwidth}
+      \centering
+      \includegraphics[width=.4\linewidth]{img/noise-free-lateration}
+      \caption{with noise-free measurements}
+    \end{subfigure}%
+    \begin{subfigure}{.5\textwidth}
+      \centering
+      \includegraphics[width=.4\linewidth]{img/lateration}
+      \caption{with noisy measurements}
+    \end{subfigure}
+    \caption{Trilateration technique}
+  \end{figure}
+
+  \begin{enumerate}[label=(\roman*)]
+    \item \textit{Lateration/Trilateration} is the technique that uses distance information from anchor nodes to locate a target. In a 2D space, lateration involves the determination of the location of an unknown node as the intersection point of three circles centered in three non-collinear anchors (A, B and C), given that distances R1, R2 and R3 (i.e. circle radii) between the node and anchors are known. This technique is referred to as \textit{trilateration}. In a 3D space, there is a need of at least four anchor nodes to determine the location of a target node.
+    \item \textit{Triangulation} is based on amgle measurements to estimate the location of an unknown node.
+    \item \textit{Multi-lateration} takes in consideration more than the minimum number of required anchor nodes.
+  \end{enumerate}
 \end{enumerate}
 
-\subsubsection{Range-free}
+\paragraph{Limitations}
+Some of the analyzed range-based localization techniques are based on assumptions that do not always hold or are impractical such as circular radio range, symmetric radio connectivity, lack of obstructions, clear line-of-sight.
 
-\subsection{Geolocation techniques}Geolocation is the act of finding unknown nodes locations based on some information pertaining to distances and angles measurements.
+\subsubsection{Range-free}
+Range-free methods do not rely on distance or angle estimation in localization. They rather use proximity or connectivity information to devise the location of the target.
+
+Anchor-based range-free localization techniques can be classified as:
+\begin{enumerate}[label=(\alph*)]
+  \item \textit{Area-based approaches} estimate the position of the target as a particular point in the polygon formed by the anchor nodes. Two main method are proposed:
+  \begin{enumerate}[label=(\roman*)]
+    \item \textit{Centroid}
+    \item \textit{Approximate Point-In-Triangle (APIT)}
+  \end{enumerate}
+  \item \textit{Multi-hop localization approaches} are used when a target is not in communication range with at least three anchor nodes because of the limitation of the transmission power. They rely on:
+  \begin{enumerate}[label=(\roman*)]
+    \item \textit{DV-Hop}
+  \end{enumerate}
+\end{enumerate}
 
 \end{document}
