@@ -51,7 +51,7 @@ We wish you good luck!}
     \item \textbf{Logical}: applications and data may need to be moved for design reasons.
 \end{itemize}
 
-Mobile computing relys on the ability to use devices \textit{non-physically connected} and \textit{context-aware}. And these devices must keep computinal and communicaiton capabilities paying attention to energy comsumption because of their battery-powered nature.
+Mobile computing relys on the ability to use devices \textit{non-physically connected} and \textit{context-aware}. These devices must keep computinal and communicaiton capabilities paying attention to energy comsumption because of their battery-powered nature.
 
 \section{Localization systems}
 Localization systems consist of two main blocks:
@@ -196,7 +196,7 @@ Location discovery consists of two phases:
 
   \begin{enumerate}[label=(\roman*)]
     \item \textit{Lateration/Trilateration} is the technique that uses distance information from anchor nodes to locate a target. In a 2D space, lateration involves the determination of the location of an unknown node as the intersection point of three circles centered in three non-collinear anchors (A, B and C), given that distances R1, R2 and R3 (i.e. circle radii) between the node and anchors are known. This technique is referred to as \textit{trilateration}. In a 3D space, there is a need of at least four anchor nodes to determine the location of a target node.
-    \item \textit{Triangulation} is based on amgle measurements to estimate the location of an unknown node.
+    \item \textit{Triangulation} is based on angle measurements to estimate the location of an unknown node.
     \item \textit{Multi-lateration} takes in consideration more than the minimum number of required anchor nodes.
   \end{enumerate}
 \end{enumerate}
@@ -209,14 +209,78 @@ Range-free methods do not rely on distance or angle estimation in localization. 
 
 Anchor-based range-free localization techniques can be classified as:
 \begin{enumerate}[label=(\alph*)]
-  \item \textit{Area-based approaches} estimate the position of the target as a particular point in the polygon formed by the anchor nodes. Two main method are proposed:
+  \item \textit{Area-based approaches} estimate the position of the target as a particular point in the polygon formed by the anchor nodes. Two main methods are proposed:
   \begin{enumerate}[label=(\roman*)]
-    \item \textit{Centroid}
-    \item \textit{Approximate Point-In-Triangle (APIT)}
+    \item \textit{Centroid} consists in computing the location of the target as the \textit{centroid} point, defined as the barycenter of a set of anchors, as shown in Figure~\ref{fig:centroid}. In the most general form, assuming $n$ anchor nodes $A_i$ with coordinates $(X_i, Y_i )$ are detected by the target node (through beacon listening), the latter calculates its
+    coordinate $(X_G, Y_G)$ such that:
+
+    \begin{equation}
+    (X_G, Y_G) = (\frac{\sum_{i=1}^n(X_i)}{n}, \frac{\sum_{i=1}^n(Y_i)}{n})
+    \end{equation}
+
+    Note that the more the number of anchors we have, the more accuracy we will obtain.
+
+    \begin{figure}[t]
+      \centering
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=.4\linewidth]{img/centroid}
+        \caption{\label{fig:centroid}Centroid}
+      \end{subfigure}%
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=.4\linewidth]{img/apit}
+        \caption{\label{fig:apit}APIT}
+      \end{subfigure}
+      \caption{Area-base localization techniques}
+    \end{figure}
+
+    \item \textit{Approximate Point-In-Triangle (APIT)} assumes that the location of the target is the center of gravity of a certain triangle, which is defined as the intersection of triangles formed by anchors in which the target node resides, as illustrated in Figure~\ref{fig:apit}.
+
+    The idea is to divide the environment into triangular regions, testing whether the target is inside a given triangle or not. The center of gravity of the triangles' intersection will represent the estimation target position.
+
+    The main challenge in this technique is to determine whether the target is inside or outside a certain triangle. The idea, illustrated in Figure~\ref{fig:pit-test}, referred to as \textit{perfect PIT} and relies on checking the existence of a direction such that if the target moves according to that direction, it will simultaneously get further/closer to all triangle points, i.e. anchors.
+    Two major handicaps hinder the practicability of this approach in real-world. First, nodes typically do not have the ability to recognize the direction without moving. Second, it is not possible to perform an exhaustive test covering all possible directions in which the target may move to. To solve both problems, an approximation has been proposed and whose idea is to use neighborhood information, exchanged via beaconing, to emulate the node movement in the Perfect PIT test as shown in Figure~\ref{fig:apit-test}:
+    \begin{enumerate}[label=\arabic*.]
+      \item The target node asks its neighbors for their distances to three corner anchors;
+      \item The target compares its distance to these three corner anchors against those of its neighbors;
+      \item If there exists at least one anchor such that it is further from or closer to all corner anchors than the target, then the latter considers itself as being outside the triangle.
+    \end{enumerate}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.7\textwidth]{img/pit-test}
+      \caption{\label{fig:pit-test}Possible cases in point-in-triangle test. $N$ denotes the target node, and $A_i$ denotes the $i$-th anchor. The \textit{left figure} shows that if the target $N$ is inside the triangle moves in any direction, it will get close to some anchors and far from others. In the \textit{right figure}, if the target node $N$ is outside the triangle moves in the indicated direction, it will get far to all anchors at the same time.}
+    \end{figure}
+
+    \begin{figure}[h]
+      \centering
+      \includegraphics[width=0.7\textwidth]{img/apit-test}
+      \caption{\label{fig:apit-test}Possible cases in approximate point-in-triangle test. $N$ denotes the target node, and $A_i$ denotes the $i$-th anchor. The \textit{left figure} shows that if the target $N$ is inside the triangle, none of its neighbors is either close to or far from all anchors. In the \textit{right figure}, if the target node $N$ is outside the triangle, its neighbor $n_1$ indicates that is it further to all anchors than it.}
+    \end{figure}
+
+   % TODO -- Relative Distance Estimation, Error scenarios, Pros and Cons
+
   \end{enumerate}
-  \item \textit{Multi-hop localization approaches} are used when a target is not in communication range with at least three anchor nodes because of the limitation of the transmission power. They rely on:
+  \item \textit{Multi-hop localization approaches} are used when a target is not in communication range with at least three anchor nodes because of the limitation of the transmission power. In this case the idea consists in flooding the network such that each anchor independently broadcasts a \textit{beacon}, embedding its location and a hop-counter field initially set to one and increased in each new hop. Then, each target node identifies the shortest-path to each anchor node and tries to estimate its distance to it. One of the \textit{distance propagation methods} is:
   \begin{enumerate}[label=(\roman*)]
-    \item \textit{DV-Hop}
+    \item \textit{DV-Hop}: the idea is to compute the number of hops between any two anchors $(A_i, A_j)$ and each anchor estimates the average 1-hop distance by dividing the sum of its distance to other anchors (\textit{physical distance}) by the sum of hop counts to those anchors (\textit{logical distance}). The process consists in three steps:
+    \begin{enumerate}[label=\arabic*.]
+    	\item \textit{Node update phase}: when a target node $N_i$ receives a beacon from an anchor, it maintains the record $(X_i, Y_i, h_i)$ for each anchor $A_i$, where $(X_i, Y_i)$ represents the location of the anchor, and $h_i$, the number of hops from $N_i$ to that anchor $A_i$.
+    	\item \textit{1-hop distance estimation phase}: when an anchor node receives the locations and hop counts to the other anchors, it calculates the estimated average 1-hop distance, refereed to as \textit{correction factor} $c_i$, expressed as follows:
+    	\begin{equation}
+    	c_i = \frac{\sum(\sqrt{(x_i - x_j)^2 + (y_i - y_j)^2})}{\sum{(h_i)}}
+    	\end{equation}
+    	Then the anchor floods the network with the estimated 1-hop distance. A node that recives a correction, forwards it and then stops forwarding subsequent corrections.
+    	\item \textit{Target node localization}: each target uses the correction sent from the \textbf{closest} anchor as the estimated 1-hop distance. It then multiplies the 1-hop distance by the hop counts to the other anchors to estimate its physical distance to them. After getting distance estimates to at least three anchors, a target can use trilateration to approximate its location.
+    \end{enumerate}
+    An example is shown in Figure~\ref{fig:dv-hop}.
+
+    \begin{figure}[t]
+      \centering
+      \includegraphics[width=0.4\textwidth]{img/dv-hop}
+      \caption{\label{fig:dv-hop}DV-Hop example with anchor nodes $L_1$, $L_2$, $L_3$ and target node $A$. $c_1 = \frac{100+40}{6+2} = 17.5$, $c_2 = \frac{40+75}{2+5} = 16.42$, $c_3 = \frac{75+100}{6+5} = 15.90$. Target $A$ gets the correction from the closest anchor $L_2$ and computes the distance to $L_1 = 3 \times 16.42$, $L_2 = 2 \times 16.42$, $L_3 = 3 \times 16.42$.}
+    \end{figure}
   \end{enumerate}
 \end{enumerate}
 
