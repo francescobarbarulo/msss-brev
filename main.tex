@@ -284,4 +284,90 @@ Anchor-based range-free localization techniques can be classified as:
   \end{enumerate}
 \end{enumerate}
 
+\newpage
+
+\section{Publish-Subscribe Pattern}
+The Public-Subscribe pattern is a messaging pattern where sender of messages, called \textit{publishers}, do not program the messages to be sent directly to specific receivers, called \textit{subscribers}, but instead categorize published messages into classes without knowledge of which subscribers, if any, tehre may be.
+
+Similarly, \textit{subscribers} express interest in one or more classes and only receive messages that are of interest, without knowledge of which publishers, if any, they are. The process of selecting messages for reception and processing is called \textbf{filtering}:
+\begin{itemize}
+  \item in a \textbf{topic-based} system messages are published to \textit{topics} and subscribers will receive only messages published to topics to which they subscribe.
+  \item in a \textbf{content-based} system messages are only delivered to a subscriber if the attributes or content of those messages matches constraints defined by the subscriber.
+\end{itemize}
+
+Many solutions have been proposed for implementing the Publish-Subscribe system shown in Figure~\ref{fig:ps-problem}:
+\begin{itemize}
+  \item \textbf{client-server} solution is simple but not scalable, resulting in an overload on the server which is a single point of failure.
+  \item \textbf{peer-to-peer (P2P)} architecture is a distributed system with a large number of heterogeneous and unreliable nodes, but it discloses the \textit{lookup} problem, i.e. how to know where the \textit{repository} node is. Three possible approach have been proposed:
+  \begin{itemize}
+    \item \textbf{centralized} approach based on a \textit{coordinator} node which must maintain $O(N)$ status and represents a single point of failure;
+    \item \textbf{flooding} approach which foresees $O(N)$ messages per lookup;
+    \item \textbf{DHT} approach which foresees $O(\log(N))$ messages per lookup, but building and maintenance of \textbf{routing tables} is needed.
+  \end{itemize}
+\end{itemize}
+
+\begin{figure}[b!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{img/ps-problem}
+  \caption{\label{fig:ps-problem} Publish-Subscribe problem}
+\end{figure}
+
+
+\subsection{Distributed Hash Table (DHT)}
+A Distributed Hash Table (DHT) described in Figure~\ref{fig:dht} is a distributed system that provides a \textbf{lookup} service similar to a hash table: $(key, value)$ pairs are stored in a DHT, and any participating node can efficiently retrieve the value associated with a given key. 
+
+The main advantage of a DHT is that nodes can be added/removed with minimum work around re-distributing keys. Keys are unique identifiers which map to particular values, which in turn can be anything from addresses, to documents, to arbitrary data. Responsibility for maintaining the mapping from keys to values is distributed among the nodes, in such a way that a change in the set of participants causes a minimal amount of disruption. This allows a DHT to scale to extremely large numbers of nodes and to handle continual node arrivals, departures, and failures.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.7\textwidth]{img/dht}
+  \caption{\label{fig:dht} DHT approach}
+\end{figure}
+
+\subsubsection{DHT structure}
+
+The structure of a DHT can be decomposed into several main components:
+\begin{itemize}
+  \item an abstract \textbf{keyspace}, such as the set of 160-bit strings;
+  \item a \textbf{keyspace partitioning scheme} splits ownership of this keyspace among the participating nodes;
+  \item an \textbf{overlay network} then connects the nodes, allowing them to find the owner of any given key in the keyspace.
+\end{itemize}
+
+\begin{figure}[b!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{img/dht-api}
+  \caption{\label{fig:dht-api} DHT API}
+\end{figure}
+
+\subsubsection{DHT operations}
+
+A typical use of the DHT for storage and retrieval might proceed as follows:
+\begin{enumerate}[label=\arabic*.]
+  \item to index a file with given filename and data in the DHT, the SHA-1 hash of filename is generated, producing a 160-bit key $k$, and a message \texttt{insert(k, data)} is sent to a node participating in the DHT.
+  \item the message is forwarded from node to node through the overlay network until it reaches the single node responsible for key $k$ as specified by the keyspace partitioning. That node then stores the key and the data.
+  \item any other client can then retrieve the contents of the file by again hashing filename to produce $k$ and asking a DHT node to find the data associated with $k$ with a message \texttt{lookup(k)}.
+  \item the message will again be routed through the overlay to the node responsible for $k$, which will reply with the stored data.
+\end{enumerate}
+
+\subsubsection{DHT properties}
+
+DHTs characteristically emphasize the following properties:
+\begin{itemize}
+  \item \textit{Autonomy and decentralization}: the nodes collectively form the system without any central coordination.
+  \item \textit{Fault tolerance}: the system should be reliable even with nodes continuously joining, leaving, and failing.
+  \item \textit{Scalability}: the system should function efficiently even with thousands or millions of nodes.
+  \item \textit{Load Balancing}: the hash function should evenly distribute keys to nodes.
+  \item \textit{Anonimity}: can be achieved by special routing overlay networks that hide the physical location of each node from other participants.
+\end{itemize}
+
+\subsection{Pastry}
+
+\subsection{Scribe}
+
+
+
+
+
+
+
 \end{document}
