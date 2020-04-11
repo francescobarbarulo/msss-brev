@@ -15,6 +15,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 
 \usepackage{enumitem}
 \usepackage{algorithm}
@@ -45,13 +46,13 @@ We wish you good luck!}
 \pagenumbering{arabic}
 
 \section{Introduction}
-\subsection{Mobility}
-\begin{itemize}
-    \item \textbf{Physical}: hardware actually changes its physical position;
-    \item \textbf{Logical}: applications and data may need to be moved for design reasons.
-\end{itemize}
 
-Mobile computing relys on the ability to use devices \textit{non-physically connected} and \textit{context-aware}. These devices must keep computinal and communicaiton capabilities paying attention to energy comsumption because of their battery-powered nature.
+Mobile computing relys on the ability to use devices \textit{non-physically connected} and \textit{context-aware}. Mobility can be:
+\begin{itemize}
+  \item \textbf{physical}: hardware actually changes its physical position;
+  \item \textbf{logical}: applications and data may need to be moved for design reasons.
+\end{itemize}
+These devices must keep computinal and communicaiton capabilities paying attention to energy comsumption because of their battery-powered nature.
 
 \section{Localization systems}
 Localization systems consist of two main blocks:
@@ -361,6 +362,71 @@ DHTs characteristically emphasize the following properties:
 \end{itemize}
 
 \subsection{Pastry}
+\textit{Pastry} is a robust, self-organizing peer-to-peer overlay network for DHT. The key-value pairs are stored in a \textbf{redundant} peer-to-peer network of connected hosts. The protocol is bootstrapped by supplying it with the IP address of a peer already in the network and from then on via the \textbf{routing table} which is dynamically built and repaired. Because of its redundant and decentralized nature, there is no single point of failure and any single node can leave the network at any time without warning and with little or no chance of data loss.
+
+\subsubsection{Design}
+The topology of the hash table's key-space is \textbf{circular}. NodeIds and keys are 128-bit unsigned integer (in base $2^b$) representing position in the circular space. NodeIds are chosen randomly and uniformly, so peers who are adjacent in nodeId are geographically diverse. Unique nodeIds are assigned when nodes join the system, based on a secure hash of the node’s IP address. Key are stored in the node with nodeId numerically closest to the key, among all live Pastry nodes.
+
+\subsubsection{Routing}
+Given a message and a key, Pastry reliably routes the message to the node with the nodeId that is numerically closest to the key. Assuming a network consisting of $N$ nodes, Pastry can route to any node in less than $\ceil{\log_{2^b}N}$ steps on average ($b$ is a configuration parameter with typical value 4). With concurrent node failures, eventual delivery is guaranteed, unless $l/2$ or more nodes with \textit{adjacent} nodeIds fail simultaneously ($l$ is an even integer parameter with typical value 16). The tables required in each Pastry node have only $(2^b - 1) * \ceil{\log_{2^b}N} + l$ entries, where each entry maps a nodeId to the associated node’s IP address.
+
+\paragraph{Prefix routing}
+NodeIds and keys are thought of as a sequence of digits with base $2^b$, this for making the routing table more compact. A node's routing table is organized into $\ceil{\log_{2^b}N}$ rows with $2^b - 1$ entries each. The $2^b - 1$ entries in row $n$ each refer to a node whose nodeId matches the present node's nodeId in the first $n$ digits, but whose $n + 1$th digit has one of the $2^b - 1$ possible values other than the $n + 1$th digit in the present node's ID. Each entry in the routing table refers to one of the potentially many nodes whose nodeId have the appropriate prefix. Among such nodes, the one closest to the present node (according to a scalar \textit{proximity metric}, such as the round trip time) is chosen. Figure~\ref{fig:routing-table-1} shows a possible routing table of node with nodeId $65a1x$ and Figure~\ref{fig:routing-table-2} a possible routing table of node with nodeId $10233102$. In the latter, we may notice that the last rows are not completely filled or even empty.
+
+\begin{figure}[t]
+  \centering
+  
+\end{figure}
+
+\begin{figure}[t]
+      \centering
+      \begin{subfigure}{.45\textwidth}
+        \centering
+        \includegraphics[width=0.8\textwidth]{img/routing-table-1}
+        \caption{\label{fig:routing-table-1}Routing table of a Pastry node with nodeId $65a1x$, $b=4$. Digits are in base 16, $x$ represents an arbitrary suffix.}
+      \end{subfigure}\hfill%
+      \begin{subfigure}{.45\textwidth}
+        \centering
+        \includegraphics[width=0.8\textwidth]{img/routing-table-2}
+        \caption{\label{fig:routing-table-2}Routing table of a Pastry node with nodeId $10233102$, $b=2$, $l=8$. Digits are in base 4.}
+      \end{subfigure}
+      \caption{Pastry routing table}
+    \end{figure}
+
+In addition to the routing table, each node maintains IP addresses for the nodes in its \textit{leaf set}, i.e., the set of nodes with the $l/2$ numerically closest larger nodeIds, and the $l/2$ nodes with numerically closest smaller nodesIDs, relative to the present node's nodeId.
+
+\begin{figure}[b]
+  \centering
+  \includegraphics[width=0.6\textwidth]{img/routing-step}
+  \caption{\label{fig:routing-step} Routing a message from node $65a1fc$ with key $d46a1c$.}
+\end{figure}
+
+\paragraph{Routing step}
+Figure~\ref{fig:routing-step} shows the path of an example message.
+\begin{enumerate}[label=\arabic*.]
+  \item Seek the routing table and forward the message to a node whose nodeId shares with the key a prefix that is at least one digit longer than the prefix that the key shares with the current nodeId.
+  \item If no such node is found in the routing table, check the leaf set and forward the message to a node whose nodeId shares a prefix with the key as long as the current node, but is numerically closer to the key than the current nodeId.
+  \item If such node does not exist in the leaf set, the key is stored in the current node (unless the $l/2$ adjacent nodes in the leaf set have failed concurrently).
+\end{enumerate}
+
+\subsubsection{Locality}
+Pastry’s locality describes the properties of Pastry’s routes with respect to the proximity metric. The proximity metric is a scalar value that reflects the “distance” between any pair of nodes, such as the round trip time. It is assumed that a function exists that allows each Pastry node to determine the “distance” between itself and a node with a given IP address. Two main property are discussed in the following:
+\begin{itemize}
+  \item \textit{short routes} property concerns the total distance, in terms of proximity metric, that messages travel along Pastry routes. Simulations show that the average distance traveled by a message is between 1.59 and 2.2 times the distance between the source and destination in the underlying Internet.
+  \item \textit{route convergence} property is concerned with the distance traveled by the two messages sent to the same key before their routes converge. Simulations show that the average distance traveled by each of the two messages before their routes converge is approximately equal to the distance between their respective source nodes.
+\end{itemize}
+
+\subsubsection{Node addition}
+An arriving node with the newly chosen nodeId $X$ can initialize its state by:
+\begin{enumerate}
+  \item contacting a \textbf{known} nearby node $A$ (according to the proximity metric) and asking $A$ to route a \textit{join} message using $X$ as the key.
+  \item The message is routed to the existing node $Z$ with nodeId numerically closest to $X$.
+  \item $X$ then obtains the \textit{leaf set} form $Z$ and the i-th row of the routing table from the i-th node encountered along the route from $A$ to $Z$.
+  \item $X$ notifies nodes to update their states.
+\end{enumerate}
+
+\subsubsection{Node failure}
+To handle node failures, neighboring nodes in the nodeId space (which are aware of each other by virtue of being in each other’s leaf set) periodically exchange keep-alive messages. If a node is unresponsive for a period $T$, it is presumed failed. All members of the failed node’s leaf set are then notified and they update their leaf sets. Since the leaf sets of nodes with adjacent nodeIds overlap, this update is trivial. A recovering node contacts the nodes in its last known leaf set, obtains their current leaf sets, updates its own leaf set and then notifies the members of its new leaf set of its presence. Routing table entries that refer to failed nodes are repaired lazily.
 
 \subsection{Scribe}
 
