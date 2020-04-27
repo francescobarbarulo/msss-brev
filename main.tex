@@ -429,11 +429,49 @@ An arriving node with the newly chosen nodeId $X$ can initialize its state by:
 To handle node failures, neighboring nodes in the nodeId space (which are aware of each other by virtue of being in each other’s leaf set) periodically exchange keep-alive messages. If a node is unresponsive for a period $T$, it is presumed failed. All members of the failed node’s leaf set are then notified and they update their leaf sets. Since the leaf sets of nodes with adjacent nodeIds overlap, this update is trivial. A recovering node contacts the nodes in its last known leaf set, obtains their current leaf sets, updates its own leaf set and then notifies the members of its new leaf set of its presence. Routing table entries that refer to failed nodes are repaired lazily.
 
 \subsection{Scribe}
+Scribe is a scalable application-level multicast infrastructure built on top of Pastry. Any Scribe node may create a \textit{group}; other nodes can then join the group, or multicast messages to all members of the group (provided they have the appropriate credentials). Scribe provides best-effort delivery of multicast messages, and specifies no particular delivery order.
+
+Scribe uses Pastry to manage group creation, group joining and to build a per-group multicast tree used to disseminate the messages multicast in the group. Pastry and Scribe are fully decentralized: all decisions are based on local information, and each node has identical capabilities.
+
+Scribe offers a simple API to its applications to which credentials must be provided:
+\begin{itemize}
+	\item \texttt{create(credentials, groupId)} creates a group with groupId. 
+	\item \texttt{join(credentials, groupId, messageHandler)} causes the local node to join the group with groupId. All subsequently received multicast messages for that group are passed to the specified message handler.
+	\item \texttt{leave(credentials, groupId)} causes the local node to leave the group with groupId.
+	\item \texttt{multicast(credentials, groupId, message)} causes the message to be multicast within the group with groupId.
+\end{itemize}
+
+\subsubsection{Implementation}
+
+A Scribe system consists of a network of Pastry nodes, where each node runs the Scribe application software. The Scribe software on each node provides the \textit{forward} and \textit{deliver} methods, which are invoked by Pastry whenever a Scribe message arrives.
+
+Each group has a unique \textit{groupId}. The Scribe node with a nodeId numerically closest to the groupId acts as the \textit{rendez-vous point} for the associated group. The rendez-vous point is the root of the multicast tree created for the group.
+
+To create a group, a Scribe node asks Pastry to route a \texttt{CREATE} message using the groupId as the key (e.g. \texttt{route(CREATE,groupId)}). Pastry delivers this message to the node with the nodeId numerically closest to groupId. The Scribe deliver method adds the group to the list of groups it already knows about. It also checks the credentials to ensure that the group can be created, and stores the credentials. This Scribe node becomes the rendez-vous point for the group.
+The groupId is the hash of the group’s textual name concatenated with its creator’s name. The hash is computed using a collision resistant hash function (e.g. SHA-1), which ensures a uniform distribution of groupIds. Since Pastry nodeIds are also uniformly distributed, this ensures an even distribution of groups across Pastry nodes.
+
+\subsubsection{Subscription}
+
+Scribe creates a multicast tree, rooted at the rendez-vous point, to disseminate the multicast messages in the group. The multicast tree is created using a scheme similar to reverse path forwarding. The tree is formed by joining the Pastry routes from each group member to the rendez-vous point.
+
+Figure~\ref{fig:scribe} illustrates the group joining mechanism. We assume that there is a group with groupId 1100 whose rendez-vous point is the node with the same identifier. The node with nodeId 0111 is joining this group. In this example, Pastry routes the \texttt{JOIN} message to node 1001; then the message from 1001 is routed to 1101; finally, the message from 1101 arrives at 1100. This route is indicated by the solid arrows.
 
 
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.5\textwidth]{img/scribe}
+  \caption{\label{fig:scribe} Multicast tree creation}
+\end{figure}
 
+\subsubsection{Multicast message dissemination}
 
+Multicast sources use Pastry to locate the rendez-vous point of a group: they route to the rendez-vous point (e.g. \texttt{route(MULTICAST, groupId)}), and ask it to return its IP address.
+Multicast messages are disseminated from the rendez-vous point along the multicast tree. There is a single multicast tree for each group.
 
+\subsubsection{Repairing the multicast tree}
+
+Periodically, each non-leaf node in the tree sends a heartbeat message to its children. Multicast messages serve as an implicit heartbeat signal avoiding the need for explicit heartbeat messages in many cases. A child suspects that its parent is faulty when it fails to receive heartbeat messages. Upon detection of the failure of its parent, a node calls Pastry to route a \texttt{JOIN} message to the group’s identifier. Pastry will route the message to a new parent, thus repairing the multicast tree.
+For example, in Figure~\ref{fig:scribe}, consider the failure of node 1101. Node 1001 detects the failure of 1101 and uses Pastry to route a \texttt{JOIN} message towards the root through an alternative route (indicated by the dashed arrows). The message reaches node 1111 who sends a JOIN message towards the root.
 
 
 \end{document}
