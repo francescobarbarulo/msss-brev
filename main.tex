@@ -52,7 +52,7 @@ Mobile computing relys on the ability to use devices \textit{non-physically conn
   \item \textbf{physical}: hardware actually changes its physical position;
   \item \textbf{logical}: applications and data may need to be moved for design reasons.
 \end{itemize}
-These devices must keep computinal and communicaiton capabilities paying attention to energy comsumption because of their battery-powered nature.
+These devices must keep computational and communicaiton capabilities paying attention to energy comsumption because of their battery-powered nature.
 
 \section{Localization systems}
 Localization systems consist of two main blocks:
@@ -74,7 +74,7 @@ Localization systems consist of two main blocks:
 The topology of a localization algorithm refers to \textit{where} and \textit{how} the location of a given node is calculated:
 
 \begin{itemize}
-	\item \textbf{Centralized localizaiton}: a central device estimates the location of unknown nodes based on the signal measurements forwarded by anchors;
+	\item \textbf{Centralized localization}: a central device estimates the location of unknown nodes based on the signal measurements forwarded by anchors;
 	\item \textbf{Localized localization}: each object estimates its location using the collected signal measurements and location information of the anchor nodes in its neighbourhood.
 \end{itemize}
 
@@ -111,7 +111,7 @@ We can distinguish four different system topologies for localization systems, as
 \end{itemize}
 
 \subsection{Category}
-The catogery of the localization technique pertains to how the location of a node is calculated depending on whether they are based on distance measurement or not. The two main categories are: \textit{range-based} and \textit{range-free}. 
+The category of the localization technique pertains to how the location of a node is calculated depending on whether they are based on distance measurement or not. The two main categories are: \textit{range-based} and \textit{range-free}.
 
 Note that all the presented techniques are classified as \textit{anchor-based} schemes, assuming the existence of nodes with known positions.
 
@@ -121,7 +121,7 @@ Range-based (or distance-based) techniques rely on the computation of distances 
 Location discovery consists of two phases:
 \begin{enumerate}
   \item \textbf{Ranging phase} (or measuring distance): each node estimates its distance or angle from neighbors based on information contained in \textit{beacon} messages.
-  The main three distance measuring methods are: 
+  The main three distance measuring methods are:
 
   \begin{enumerate}[label=(\roman*)]
     \item \textit{Received Signal Strength (RSS)} estimates the distance from some set of neighbors using the attenuation of emitted signal strength. In free space, the RSS varies as the inverse square of the distance $d$ between the transmitter and the receiver:
@@ -175,7 +175,7 @@ Location discovery consists of two phases:
 
     \item \textit{Angle of Arrival} relies on computing the angle by two lines connecting the unknown node with two anchor nodes. This technique relies on the use of directional antennas that can rotate on their axis or an array of antennas. For locating the unknown node at least three anchor nodes in 3D space and two anchor nodes in 2D space are needed.
 
-    The advantage of AoA is that it does not require time sinchronization but on the other hand it requires vomplex and expensive hardware.
+    The advantage of AoA is that it does not require time sinchronization but on the other hand it requires complex and expensive hardware.
   \end{enumerate}
 
   \item \textbf{Estimation phase} (or combining distance): nodes use range information and anchors' locations to estimate their positions. In this phase some \textit{geometric geolocation techniques} are used:
@@ -315,7 +315,7 @@ Many solutions have been proposed for implementing the Publish-Subscribe system 
 
 
 \subsection{Distributed Hash Table (DHT)}
-A Distributed Hash Table (DHT) described in Figure~\ref{fig:dht} is a distributed system that provides a \textbf{lookup} service similar to a hash table: $(key, value)$ pairs are stored in a DHT, and any participating node can efficiently retrieve the value associated with a given key. 
+A Distributed Hash Table (DHT) described in Figure~\ref{fig:dht} is a distributed system that provides a \textbf{lookup} service similar to a hash table: $(key, value)$ pairs are stored in a DHT, and any participating node can efficiently retrieve the value associated with a given key.
 
 The main advantage of a DHT is that nodes can be added/removed with minimum work around re-distributing keys. Keys are unique identifiers which map to particular values, which in turn can be anything from addresses, to documents, to arbitrary data. Responsibility for maintaining the mapping from keys to values is distributed among the nodes, in such a way that a change in the set of participants causes a minimal amount of disruption. This allows a DHT to scale to extremely large numbers of nodes and to handle continual node arrivals, departures, and failures.
 
@@ -375,7 +375,7 @@ NodeIds and keys are thought of as a sequence of digits with base $2^b$, this fo
 
 \begin{figure}[t]
   \centering
-  
+
 \end{figure}
 
 \begin{figure}[t]
@@ -435,7 +435,7 @@ Scribe uses Pastry to manage group creation, group joining and to build a per-gr
 
 Scribe offers a simple API to its applications to which credentials must be provided:
 \begin{itemize}
-	\item \texttt{create(credentials, groupId)} creates a group with groupId. 
+	\item \texttt{create(credentials, groupId)} creates a group with groupId.
 	\item \texttt{join(credentials, groupId, messageHandler)} causes the local node to join the group with groupId. All subsequently received multicast messages for that group are passed to the specified message handler.
 	\item \texttt{leave(credentials, groupId)} causes the local node to leave the group with groupId.
 	\item \texttt{multicast(credentials, groupId, message)} causes the message to be multicast within the group with groupId.
