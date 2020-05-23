@@ -1,8 +1,12 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
+\usepackage{libertine}
+\usepackage{libertinust1math}
+\usepackage[T1]{fontenc}
+\usepackage{inconsolata}
 
-\usepackage[top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
+\usepackage[top=1.5cm, bottom=2.5cm, left=1cm, right=1cm]{geometry}
 
 \usepackage{datetime}
 \newdateformat{monthyeardate}{%
@@ -472,6 +476,128 @@ Multicast messages are disseminated from the rendez-vous point along the multica
 
 Periodically, each non-leaf node in the tree sends a heartbeat message to its children. Multicast messages serve as an implicit heartbeat signal avoiding the need for explicit heartbeat messages in many cases. A child suspects that its parent is faulty when it fails to receive heartbeat messages. Upon detection of the failure of its parent, a node calls Pastry to route a \texttt{JOIN} message to the group’s identifier. Pastry will route the message to a new parent, thus repairing the multicast tree.
 For example, in Figure~\ref{fig:scribe}, consider the failure of node 1101. Node 1001 detects the failure of 1101 and uses Pastry to route a \texttt{JOIN} message towards the root through an alternative route (indicated by the dashed arrows). The message reaches node 1111 who sends a JOIN message towards the root.
+
+\section{Using Humans as Sensors}
+The advent of online social networks, such as Twitter, where humans volunteer free information at scale about the physical world, begs the question of whether or not they can be leveraged as a category of sensor networks. \textit{Mobile crowdsensing} is the process of collecting these information with the aim of inferring any knowledge of common interest.
+There exist two types of mobile crowdsensing:
+\begin{itemize}
+	\item \textit{participatory}: where the user voluntarily participate in contributing information and are aware of doing it;
+	\item \textit{opportunistic}: where the data in sensed, collected and shared automatically without user intervention and in some cases, even without the user's explicit knowledge.
+\end{itemize}
+
+Among them we are interested in participatory sensing, where the user report the observed physical environment that is external to the (human) sensor. In this case, the physical environment has a unique state, leading to a unique \textit{ground truth}, according to which these descriptions are either true or false. Hence, observation can be viewed as \textit{binary claims}. The sensing problem is to determine which claims are correct, given that the \textit{reliability} of human sensors is generally unknown a priori and the \textit{provenance} of reported observations is \textit{uncertain} (i.e., individuals may report observations made by others as their own).
+
+\subsection{Issues}
+
+We model human participants as (i) \textit{sources of unknown reliability} generating (ii) \textit{binary measurements} of (iii) \textit{uncertain provenance}.
+
+\begin{enumerate}[label=(\roman*)]
+	\item \textit{Unknown reliability}: unlike physical sensors, we do not, in general, know the reliability of human observers. The reported physical fact is not accurate and much broader since it can be modified by the human perspective. Moreover different individuals has different reliability, expressed as the probability of producing true claims.
+	\item \textit{Binary observations}: Since the reported observations can be aither be true or false, claims can be thought of as measurements of different \textit{binary variables}.
+	\item \textit{Uncertain provenance}: it is not unusual for a person to report observations they received from others as if they were his/her own. Such rumor spreading behavior has no analogy in correctly functioning physical sensors. We call this problem one of uncertain data provenance because when Bob tweets that “Main Street is flooded”, even if we authenticate Bob as the actual source of the tweet, we do not know if Bob truely observed that first-hand or heard it from Sally. From a sensing perspective, this means that errors in “measurements” across “sensors” may be non-independent, as one erroneous observation may be propagated by other sources without being verified.
+\end{enumerate}
+
+\subsection{A solution architecture}
+
+To enable reconstruction of ground truth information from data reported by human sources, we need to (i) collect unformatted data from the “sensor network”, (ii) structure the data for analysis, (iii) understand how sources are related, and (iv) use this collective information to estimate the probability of correctness of individual observations.
+
+\subsubsection{Data collection}
+Data is collected from Twitter through a long-standing query via the exported Twitter API to match given keywords and an indicated geographic region on a map.
+
+\subsubsection{Data structuring}
+Next, we need to determine the internal consistency in reported observations. For this reason, observations are clustered based on a \textit{distance function}. This function, \texttt{distance(t1,t2)}, takes two reported observations, $t1$ and $t2$, as input and returns a measure of similarity between them, represented by a logical distance. The more dissimilar the observations, the larger the distance. In the case of data collection from Twitter, we regard individual tweets as individual observations, and borrow from natural language processing literature a \textit{cosine similarity function} that returns a measure of similarity based on the number of matching tokens in the two inputs:
+
+$$ similarity = \cos \theta = \frac{A \cdot B}{||A||\ ||B||} $$
+
+where $A$ and $B$ are vectors of token occurance in tweets.
+
+As distances are computed, the set of input observations is transformed to a graph where vertices are individual observations and links represent similarity among them. We then cluster the graph, causing similar observations to be clustered together. We call each such cluster a \textit{claim}. Hence, the claim represents a piece of information that \textit{several} sources reported.
+
+We can now construct a \textbf{source-claim graph}, \textit{SC}, in which each source, $S_i$, is connected to all claims they made (i.e., clusters they contributed to), and each claim, $C_j$ , is connected to all sources who espoused it (i.e., all sources of tweets in the corresponding cluster). We say that $S_iC_j = 1$ if source $S_i$ makes claim $C_j$. Each claim can either be true or false. The claim is true if it is consistent with ground truth in the physical world. Otherwise, it is false.
+
+\subsubsection{Sources relationship}
+Next, we need to account for uncertain provenance. Sources may have reported either their own observations or observations they heard from others. We assume the existence of a latent \textbf{social information dissemination graph}, \textit{SD}, that estimates how information might propagate from one person to another:
+
+\begin{itemize}
+	\item \textit{Epidemic Cascade network (EC)}: each distinct observation is modeled as a cascade and the time of contagion of a source describes when the source mentioned this observation.
+	\item \textit{Follower-Followee network (FF)}: A directed link $(S_i, S_k)$ exists in the social graph from source $S_i$ to source $S_k$ if $S_k$ is a follower of $S_i$.
+	\item \textit{Re-Tweeting network (RT)}: a directed link $(S_i, S_k)$ exists in the social graph if source $S_k$ retweets some tweets from source $S_i$.
+	\item \textit{RT+FF network}: a directed link $(S_i, S_k)$ exists when either $S_k$ follows $S_i$ or $S_k$ retweets what $S_i$ said.
+\end{itemize}
+
+\subsubsection{Estimation problem}
+
+Tweets are analyzed using a sliding window with size $N$. Now we can follow two schemes:
+
+\begin{itemize}
+	\item \textit{Voting}: claims with more support are more believable. For each $C_j$, where $1 \le j \le N$, count all $S_i$, where $S_iC_j = 1$. Unfortunately, it is suboptimal for two reasons. First, different sources have different degrees of reliability. Hence, their “votes” do not have the same weight. Second, sources may not be independent. When a source simply repeats what they heard from others, their “vote” does not add to the credibility of the claim.
+	
+	\item \textit{Likelihood estimation}: given graphs $SC$ and $SD$ what is the likelihood that claim $C_j$ is true, for each $j$? Formally, we compute:
+
+	$$ \forall j, 1 \le j \le N : P(C_j = 1 | SC, SD) $$
+
+	where $P(C_j = 1|SC, SD)$ is the conditional probability that $C_j$ is true given $SC$ and $SD$.
+\end{itemize}
+
+\subsubsection{Maximum Likelihood (ML) Estimation}
+
+Let $m$ be the total number of sources in our system from which we have data. Let us describe each source (i.e., “sensor”), $S_i$, $1 \le i \le m$, by two parameters, neither of which are known in advance:
+\begin{itemize}
+	\item the odds of true positives, $a_i = P(S_iC_j = 1|C_j = 1)$
+	\item the odds of false positives, $b_i = P(S_iC_j = 1|C_j = 0)$
+\end{itemize}
+Let us also denote by $d$ the unknown expected ratio of correct claims in the system, $d = P(C_j = 1)$. Let us now define the vector $\theta$ to be the vector of the above unknowns:
+
+$$ \theta = [a_1 \dots a_m b_1 \dots b_m d] $$
+
+A maximum likelihood estimator finds the values of the unknowns that maximize the probability of observations, $SC$, given the social network $SD$. Hence, we would like to find $\theta$ that maximizes $P(SC|SD,\theta)$. The probability $P(SC|SD,\theta)$ depends on which claims are true and which are false. Let us therefore introduce the vector $Z$ where element $z_j = 1$ if $C_j$ is true and zero otherwise. Using the total probability theorem, we can now rewrite the expression we want to maximize, namely $P(SC|SD,\theta)$, as follows:
+
+$$ P(SC|SD,\theta) = \sum_z P(SC,z|SD,\theta) $$
+
+The solution of the maximization of MLE can be found using algorithms described in the literature, incorporating the role of uncertain provenance into the maximum likelihood estimation algorithm. Let us divide the source claim graph $SC$ into subsets, $SC_j$, one per claim $C_j$. The subset describes which sources espoused the claim and which did not.
+
+We can define $Z(n,j)$ as the conditional probability of claim $C_j$ to be true given the observed source claim subgraph $SC_j$ and current estimation on $\theta$:
+
+$$ Z(n,j) = p(z_j = 1 | SC_j, \theta^{(n)}) $$
+
+In general, the sources that make these observations may not be independent since they may be connected in the social network leading to a possibility that one repeated the observation of another. Let $p_{ik} = P(S_iC_j|S_kC_j)$ be the probability that source $S_i$ makes claim $C_j$ given that his parent $S_k$ (in the social dissemination network) makes that claim. We call $p_{ik}$ a \textit{repeat ratio} and can approximately compute it from graph $SC$, for pairs of nodes connected in graph $SD$, as follows:
+
+$$ p_{ik} = \frac{\text{number of times } S_i \text{ and } S_k \text{ make same claim}}{\text{number of claims } S_k \text{ makes}} $$
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.5\textwidth]{img/mle}
+  \caption{\label{fig:mle} Example}
+\end{figure}
+
+Considering the example in Figure~\ref{fig:mle}, the intuition is that if the parent does not make the claim, then the children act as if they are independent sources. If the parent makes the claim, then each child repeats it with a given repeat probability.
+
+The algorithm takes as input the source claim graph $SC$ from social sensing data and the source dissemination graph $SD$ estimated from social network, and the output is the maximum likelihood estimation of source reliability and claim correctness. In particular, given the source claim graph $SC$, the algorithm begins by initializing the parameter $\theta$ with random values between 0 and 1. We also estimate the dependent ratio of each non-independent source (i.e., $p_{ik}$) from the source disseminate graph SD. The algorithm then iterates until $\theta$ converges. Finally, we can decide whether each claim $C_j$ is true or not based on the converged value of $Z(n,j)$. Specifically $C_j$ is true if $Z(n,j) \ge 0.5$ and false otherwise. 
+
+\subsection{Evaluation}
+
+Figure~\ref{fig:mle-eval} shows the result for the hurricane Sandy trace. To compare these algorithms, we implemented them inside Apollo. We observe that the Apollo-social generally outperformed the regular EM schemes in providing more true claims and suppressing the unconfirmed claims. This is achieved by incorporating the source dependency into the analytical framework of expectation maximization to better handle non-independent sources and their claims. The performance advantage of Apollo-social compared to regular EM is significant (nearly 20\%) if we use the combined social network information (i.e, RT+FF social network) constructed from follower-followee and retweet relationship between users. We observed that the performance of the Apollo-social using Epidemic Cascades (EC) to estimate the social network is between Apollo-social using RT and FF social network. The reason is the RT social network is generated from the retweet relationship from current data interval and is very dynamic to reflect current source dependency and while FF social network is generated from the follower-followee relationship independently from the data traces and is relatively static. The dynamics of source dependency of EC social network is between RT and FF social network.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{img/mle-eval}
+  \caption{\label{fig:mle-eval} Evaluation of Hurricane Sandy Trace}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \end{document}
