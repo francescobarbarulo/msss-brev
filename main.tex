@@ -184,7 +184,7 @@ Location discovery consists of two phases:
 
   \item \textbf{Estimation phase} (or combining distance): nodes use range information and anchors' locations to estimate their positions. In this phase some \textit{geometric geolocation techniques} are used:
 
-  \begin{figure}[b]
+  \begin{figure}[t]
     \centering
     \begin{subfigure}{.5\textwidth}
       \centering
@@ -252,19 +252,37 @@ Anchor-based range-free localization techniques can be classified as:
       \item If there exists at least one anchor such that it is further from or closer to all corner anchors than the target, then the latter considers itself as being outside the triangle.
     \end{enumerate}
 
+    The distance can be compared based on the signal strength measurements: the further away a node is from the anchor, the weaker the received signal strength (\textit{relative distance estimation}).
+
     \begin{figure}[H]
       \centering
       \includegraphics[width=0.7\textwidth]{img/pit-test}
       \caption{\label{fig:pit-test}Possible cases in point-in-triangle test. $N$ denotes the target node, and $A_i$ denotes the $i$-th anchor. The \textit{left figure} shows that if the target $N$ is inside the triangle moves in any direction, it will get close to some anchors and far from others. In the \textit{right figure}, if the target node $N$ is outside the triangle moves in the indicated direction, it will get far to all anchors at the same time.}
     \end{figure}
 
-    \begin{figure}[h]
+    \begin{figure}[H]
       \centering
       \includegraphics[width=0.7\textwidth]{img/apit-test}
       \caption{\label{fig:apit-test}Possible cases in approximate point-in-triangle test. $N$ denotes the target node, and $A_i$ denotes the $i$-th anchor. The \textit{left figure} shows that if the target $N$ is inside the triangle, none of its neighbors is either close to or far from all anchors. In the \textit{right figure}, if the target node $N$ is outside the triangle, its neighbor $n_1$ indicates that is it further to all anchors than it.}
     \end{figure}
 
-   % TODO -- Relative Distance Estimation, Error scenarios, Pros and Cons
+    These scenarios could be affected by errors which are described in Figure~\ref{fig:in-to-out} and \ref{fig:out-to-in}. The \textit{in-to-out error} happens when at least one neighbor node is further to all anchors than the target node. Viceversa, the \textit{out-to-in} error happens when at least one neighbor node is closest to at least one anchor than the target node.
+
+    \begin{figure}[t]
+      \centering
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=.6\linewidth]{img/in-to-out-error}
+        \caption{\label{fig:in-to-out}In-to-out error}
+      \end{subfigure}%
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=.6\linewidth]{img/out-to-in-error}
+        \caption{\label{fig:out-to-in}Out-to-in error}
+      \end{subfigure}
+      \caption{Error scenarios for APIT test}
+    \end{figure}
+
 
   \end{enumerate}
   \item \textit{Multi-hop localization approaches} are used when a target is not in communication range with at least three anchor nodes because of the limitation of the transmission power. In this case the idea consists in flooding the network such that each anchor independently broadcasts a \textit{beacon}, embedding its location and a hop-counter field initially set to one and increased in each new hop. Then, each target node identifies the shortest-path to each anchor node and tries to estimate its distance to it. One of the \textit{distance propagation methods} is:
@@ -289,7 +307,7 @@ Anchor-based range-free localization techniques can be classified as:
   \end{enumerate}
 \end{enumerate}
 
-\newpage
+\clearpage
 
 \section{Publish-Subscribe Pattern}
 The Public-Subscribe pattern is a messaging pattern where sender of messages, called \textit{publishers}, do not program the messages to be sent directly to specific receivers, called \textit{subscribers}, but instead categorize published messages into classes without knowledge of which subscribers, if any, tehre may be.
@@ -475,7 +493,9 @@ Multicast messages are disseminated from the rendez-vous point along the multica
 \subsubsection{Repairing the multicast tree}
 
 Periodically, each non-leaf node in the tree sends a heartbeat message to its children. Multicast messages serve as an implicit heartbeat signal avoiding the need for explicit heartbeat messages in many cases. A child suspects that its parent is faulty when it fails to receive heartbeat messages. Upon detection of the failure of its parent, a node calls Pastry to route a \texttt{JOIN} message to the group’s identifier. Pastry will route the message to a new parent, thus repairing the multicast tree.
-For example, in Figure~\ref{fig:scribe}, consider the failure of node 1101. Node 1001 detects the failure of 1101 and uses Pastry to route a \texttt{JOIN} message towards the root through an alternative route (indicated by the dashed arrows). The message reaches node 1111 who sends a JOIN message towards the root.
+For example, in Figure~\ref{fig:scribe}, consider the failure of node 1101. Node 1001 detects the failure of 1101 and uses Pastry to route a \texttt{JOIN} message towards the root through an alternative route (indicated by the dashed arrows). The message reaches node 1111 who sends a \texttt{JOIN} message towards the root.
+
+\clearpage
 
 \section{Using Humans as Sensors}
 The advent of online social networks, such as Twitter, where humans volunteer free information at scale about the physical world, begs the question of whether or not they can be leveraged as a category of sensor networks. \textit{Mobile crowdsensing} is the process of collecting these information with the aim of inferring any knowledge of common interest.
